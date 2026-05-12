@@ -29,7 +29,7 @@ export default function ResourceCard({ recurso }: ResourceCardProps) {
         </div>
         <div className="flex items-center text-xs text-gray-500">
           <Globe className="w-4 h-4 mr-2 text-gray-400" />
-          <span>{recurso.idioma.toUpperCase()}</span>
+          <<span>{recurso.idioma?.toUpperCase() || 'ES'}</span>span></span>
         </div>
         <div className="flex items-center text-xs text-gray-500">
           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
