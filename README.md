@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tutor Pedagógico Oficial
 
-## Getting Started
+Una aplicación web moderna diseñada para buscar metadatos educativos oficiales directamente desde el repositorio **Agrega (OAI-PMH)**, cachearlos en **Supabase** y mostrarlos en una interfaz limpia y responsive.
 
-First, run the development server:
+## 🚀 Stack Tecnológico
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Framework:** Next.js 14+ (App Router)
+- **Lenguaje:** TypeScript
+- **Estilos:** Tailwind CSS
+- **Base de Datos:** Supabase (PostgreSQL)
+- **Parser:** fast-xml-parser
+- **Iconos:** Lucide React
+- **Despliegue:** Vercel
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Configuración Local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/tu-usuario/tutor-pedagogico-oficial.git
+   cd tutor-pedagogico-oficial
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Variables de Entorno:**
+   Crea un archivo `.env.local` basado en `.env.example` y rellena tus credenciales de Supabase.
+   ```bash
+   cp .env.example .env.local
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Configurar la Base de Datos:**
+   Copia el contenido de `supabase_schema.sql` y ejecútalo en el SQL Editor de tu Dashboard de Supabase.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. **Ejecutar en desarrollo:**
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌐 Despliegue en Vercel
 
-## Deploy on Vercel
+1. Sube tu código a GitHub.
+2. Conecta tu repositorio en Vercel.
+3. Configura las mismas variables de entorno en el panel de Vercel.
+4. ¡Listo!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛡️ Seguridad y Políticas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Solo Fuentes Oficiales:** La aplicación solo consulta `agrega.educacion.es`. Cualquier otro dominio está bloqueado por validadores internos.
+- **Service Role:** La clave `SUPABASE_SERVICE_ROLE_KEY` solo se utiliza en el servidor para evitar exposiciones de seguridad.
+- **Sin IA Generativa:** Todos los datos mostrados son metadatos puros recuperados del repositorio oficial.
+
+## 📁 Estructura del Proyecto
+
+- `app/api/`: Endpoint para la lógica de búsqueda y caché.
+- `components/`: Componentes de interfaz (SearchBar, ResultsList, etc.).
+- `lib/`: Lógica de negocio, validadores y clientes de API.
+- `types/`: Definiciones de TypeScript.
+- `supabase_schema.sql`: Script de inicialización de DB.
+
+## 📝 Pruebas Recomendadas
+
+Intenta buscar los siguientes términos para verificar el funcionamiento:
+- `fracciones`
+- `ecosistemas`
+- `sintaxis`
+- `energía`
+- `geometría`
