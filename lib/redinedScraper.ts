@@ -60,7 +60,7 @@ export async function scrapeRedined(query: string): Promise<Recurso[]> {
     // Fallback: Regex simple si los selectores fallan
     if (resources.length === 0) {
       console.log('[Scraper] No items found with Cheerio, trying Regex fallback...');
-      const titleRegex = /<h4 class="artifact-title">.*?<a href="([^"]+)">(.*?)<\/a>/gs;
+      const titleRegex = /<h4 class="artifact-title">[\s\S]*?<a href="([^"]+)">([\s\S]*?)<\/a>/g;
       let match;
       while ((match = titleRegex.exec(html)) !== null && resources.length < 10) {
         const url = match[1].startsWith('http') ? match[1] : `${REDINED_BASE_URL}${match[1]}`;
