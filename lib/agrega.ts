@@ -9,7 +9,7 @@ export const buildAgregaUrl = (verb: string = 'ListRecords', metadataPrefix: str
   // Usar el set de Recursos Educativos y una fecha de inicio para optimizar la velocidad
   // Esto evita escaneos completos de la base de datos de Redined que causan timeouts
   url.searchParams.append('set', 'com_11162_3'); 
-  url.searchParams.append('from', '2010-01-01'); 
+  url.searchParams.append('from', '2023-01-01'); 
   return url.toString();
 };
 
