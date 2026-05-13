@@ -6,6 +6,8 @@ export const buildAgregaUrl = (verb: string = 'ListRecords', metadataPrefix: str
   const url = new URL(AGREGA_ENDPOINT);
   url.searchParams.append('verb', verb);
   url.searchParams.append('metadataPrefix', metadataPrefix);
+  // Usar el set de Recursos Educativos para optimizar la velocidad y relevancia
+  url.searchParams.append('set', 'com_11162_3'); 
   return url.toString();
 };
 
