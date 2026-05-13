@@ -109,11 +109,13 @@ export async function POST(request: Request) {
       fuente: 'Agrega'
     });
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error en API buscar-metadatos-agrega:', error);
     return NextResponse.json({ 
-      error: 'Error interno al procesar la solicitud.',
-      details: error instanceof Error ? error.message : 'Error desconocido',
+      error: 'Error detectado en el servidor.',
+      details: error?.message || 'Error desconocido',
+      stack: error?.stack || 'No stack available',
+      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
     }, { status: 500 });
   }
 }
