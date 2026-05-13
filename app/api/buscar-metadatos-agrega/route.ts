@@ -17,7 +17,10 @@ export async function POST(request: Request) {
     }
 
     const cleanQuery = sanitizeQuery(consulta as string);
+    console.log(`[API] Búsqueda iniciada para: "${cleanQuery}"`);
+    
     const supabase = isSupabaseConfigured() ? supabaseServer : null;
+    console.log(`[API] Supabase configurado: ${!!supabase}`);
 
     if (supabase) {
       const { data: cachedRecords, error: cacheError } = await supabase
@@ -39,11 +42,16 @@ export async function POST(request: Request) {
     }
 
     // 2. Consultar Agrega
+    console.log('[API] Consultando repositorio externo...');
     const xml = await fetchAgregaMetadata();
+    console.log(`[API] XML recibido (${xml.length} caracteres)`);
 
     // 3. Parsear y Normalizar
+    console.log('[API] Parseando XML...');
     const parsedXml = parseOaiXml(xml);
+    console.log('[API] Normalizando registros...');
     const allRecords = normalizeRecords(parsedXml, cleanQuery);
+    console.log(`[API] ${allRecords.length} registros normalizados`);
 
     // 4. Filtrar por la consulta del usuario
     const filteredRecords = filterByQuery(allRecords, cleanQuery);
