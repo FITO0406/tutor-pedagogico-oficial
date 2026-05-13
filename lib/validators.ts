@@ -14,7 +14,7 @@ export const sanitizeQuery = (query: string): string => {
   return query.replace(/[<>]/g, '').trim();
 };
 
-export const ALLOWED_HOSTS = ['agrega.educacion.es'];
+export const ALLOWED_HOSTS = ['agrega.educacion.es', 'procomun.intef.es', 'redined.educacion.gob.es'];
 
 export const validateAllowedHost = (url: string): boolean => {
   try {

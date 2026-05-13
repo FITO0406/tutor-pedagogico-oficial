@@ -1,6 +1,6 @@
 import { validateAllowedHost } from './validators';
 
-const AGREGA_ENDPOINT = 'https://agrega.educacion.es/catalogo/oai/request';
+const AGREGA_ENDPOINT = 'https://redined.educacion.gob.es/oai/request';
 
 export const buildAgregaUrl = (verb: string = 'ListRecords', metadataPrefix: string = 'oai_dc'): string => {
   const url = new URL(AGREGA_ENDPOINT);

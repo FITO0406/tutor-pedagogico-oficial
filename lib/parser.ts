@@ -56,19 +56,27 @@ export const normalizeRecords = (parsedXml: ParsedOaiXml, consulta: string): Rec
       const languages = extractField(metadata['dc:language']);
       const dates = extractField(metadata['dc:date']);
       const identifiers = extractField(metadata['dc:identifier']);
-      const urlRecurso = identifiers.find((id) => id.startsWith('http')) || '';
+
+      // Priorizar URLs que terminen en .pdf o que parezcan enlaces directos
+      const pdfUrl = identifiers.find((id) => id.startsWith('http') && id.toLowerCase().endsWith('.pdf'));
+      const handleUrl = identifiers.find((id) => id.includes('hdl.handle.net'));
+      const anyUrl = identifiers.find((id) => id.startsWith('http'));
+      
+      const urlRecurso = pdfUrl || handleUrl || anyUrl || '';
 
       return {
         consulta,
         identificador_oai: record.header?.identifier || '',
-        titulo: titles[0] || 'Sin titulo',
-        descripcion: descriptions.join(' ') || 'Sin descripcion',
+        titulo: titles[0] || 'Sin título',
+        descripcion: descriptions.length > 1 
+          ? descriptions.find(d => d.length > 50) || descriptions[0] 
+          : descriptions[0] || 'Sin descripción',
         materia: subjects.join(', ') || 'N/A',
         idioma: languages[0] || 'es',
         fecha: dates[0] || 'N/A',
         url_recurso: urlRecurso,
-        fuente: 'Agrega',
-        endpoint_consultado: 'https://agrega.educacion.es/catalogo/oai/request',
+        fuente: 'Redined / Agrega',
+        endpoint_consultado: 'https://redined.educacion.gob.es/oai/request',
         raw_metadata: record as JsonValue,
       };
     })

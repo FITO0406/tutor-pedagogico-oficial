@@ -58,9 +58,9 @@ export default function Home() {
           </h1>
 
           <p className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-            Busca y explora metadatos educativos oficiales directamente desde el catalogo{' '}
-            <span className="font-semibold text-gray-700">Agrega</span>. Informacion veraz para
-            docentes y alumnos.
+            Busca y explora metadatos educativos oficiales directamente desde los catálogos{' '}
+            <span className="font-semibold text-gray-700">Agrega y Redined</span>. Información veraz
+            para docentes y alumnos.
           </p>
 
           <div className="pt-8">
@@ -94,7 +94,7 @@ export default function Home() {
               </div>
               <h3 className="font-semibold mb-2">Fuente oficial</h3>
               <p className="text-sm text-gray-500">
-                Consulta exclusiva al servidor OAI-PMH de Agrega (`agrega.educacion.es`).
+                Consulta exclusiva a servidores oficiales (Agrega, Redined, Procomún).
               </p>
             </div>
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
