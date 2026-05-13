@@ -19,6 +19,8 @@ export async function scrapeRedined(query: string): Promise<Recurso[]> {
     }
 
     const html = await response.text();
+    console.log(`[Scraper] HTML length: ${html.length}`);
+    console.log(`[Scraper] HTML snippet: ${html.substring(0, 500)}`);
     const $ = cheerio.load(html);
     const resources: Recurso[] = [];
 
