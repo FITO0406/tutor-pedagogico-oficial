@@ -6,12 +6,14 @@ export const buildAgregaUrl = (verb: string = 'ListRecords', metadataPrefix: str
   const url = new URL(AGREGA_ENDPOINT);
   url.searchParams.append('verb', verb);
   url.searchParams.append('metadataPrefix', metadataPrefix);
-  // Usar el set de Recursos Educativos para optimizar la velocidad y relevancia
+  // Usar el set de Recursos Educativos y una fecha de inicio para optimizar la velocidad
+  // Esto evita escaneos completos de la base de datos de Redined que causan timeouts
   url.searchParams.append('set', 'com_11162_3'); 
+  url.searchParams.append('from', '2010-01-01'); 
   return url.toString();
 };
 
-export const fetchAgregaMetadata = async (timeout: number = 8000): Promise<string> => {
+export const fetchAgregaMetadata = async (timeout: number = 9500): Promise<string> => {
   const url = buildAgregaUrl();
   
   if (!validateAllowedHost(url)) {

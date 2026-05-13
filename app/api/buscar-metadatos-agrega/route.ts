@@ -4,6 +4,7 @@ import { parseOaiXml, normalizeRecords, filterByQuery } from '@/lib/parser';
 import { isSupabaseConfigured, supabaseServer } from '@/lib/supabaseServer';
 import { validateQuery, sanitizeQuery } from '@/lib/validators';
 import { Recurso } from '@/types/recurso';
+import { JsonValue } from '@/types/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -17,10 +18,7 @@ export async function POST(request: Request) {
     }
 
     const cleanQuery = sanitizeQuery(consulta as string);
-    console.log(`[API] Búsqueda iniciada para: "${cleanQuery}"`);
-    
     const supabase = isSupabaseConfigured() ? supabaseServer : null;
-    console.log(`[API] Supabase configurado: ${!!supabase}`);
 
     if (supabase) {
       const { data: cachedRecords, error: cacheError } = await supabase
@@ -41,25 +39,18 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Consultar Agrega
-    console.log('[API] Consultando repositorio externo...');
+    // 2. Consultar Agrega/Redined
     const xml = await fetchAgregaMetadata();
-    console.log(`[API] XML recibido (${xml.length} caracteres)`);
 
     // 3. Parsear y Normalizar
-    console.log('[API] Parseando XML...');
     const parsedXml = parseOaiXml(xml);
-    console.log('[API] Normalizando registros...');
     const allRecords = normalizeRecords(parsedXml, cleanQuery);
-    console.log(`[API] ${allRecords.length} registros normalizados`);
 
     // 4. Filtrar por la consulta del usuario
     const filteredRecords = filterByQuery(allRecords, cleanQuery);
 
     if (filteredRecords.length > 0) {
       // 5. Guardar en Supabase (Cache)
-      // Usamos upsert para evitar duplicados si el identificador_oai es el mismo (necesitaría índice único)
-      // Por ahora, simplemente insertamos los resultados relevantes
       if (supabase) {
         const { data: existingRows, error: existingError } = await supabase
           .from('recursos_agrega')
@@ -91,7 +82,7 @@ export async function POST(request: Request) {
                 url_recurso: record.url_recurso,
                 fuente: record.fuente,
                 endpoint_consultado: record.endpoint_consultado,
-                raw_metadata: record.raw_metadata,
+                raw_metadata: record.raw_metadata as any,
               })));
 
             if (dbError) {
@@ -106,16 +97,14 @@ export async function POST(request: Request) {
       success: true, 
       recursos: filteredRecords,
       total: filteredRecords.length,
-      fuente: 'Agrega'
+      fuente: 'Redined'
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en API buscar-metadatos-agrega:', error);
     return NextResponse.json({ 
-      error: 'Error detectado en el servidor.',
-      details: error?.message || 'Error desconocido',
-      stack: error?.stack || 'No stack available',
-      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
+      error: 'Error interno al procesar la solicitud.',
+      details: error instanceof Error ? error.message : 'Error desconocido',
     }, { status: 500 });
   }
 }
