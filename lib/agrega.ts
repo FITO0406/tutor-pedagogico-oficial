@@ -9,7 +9,7 @@ export const buildAgregaUrl = (verb: string = 'ListRecords', metadataPrefix: str
   return url.toString();
 };
 
-export const fetchAgregaMetadata = async (timeout: number = 15000): Promise<string> => {
+export const fetchAgregaMetadata = async (timeout: number = 8000): Promise<string> => {
   const url = buildAgregaUrl();
   
   if (!validateAllowedHost(url)) {
