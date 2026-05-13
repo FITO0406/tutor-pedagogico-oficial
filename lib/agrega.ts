@@ -1,6 +1,6 @@
 import { validateAllowedHost } from './validators';
 
-const AGREGA_ENDPOINT = 'https://redined.educacion.gob.es/oai/request';
+const AGREGA_ENDPOINT = 'http://redined.educacion.gob.es/oai/request';
 
 export const buildAgregaUrl = (verb: string = 'ListRecords', metadataPrefix: string = 'oai_dc'): string => {
   const url = new URL(AGREGA_ENDPOINT);
@@ -9,7 +9,7 @@ export const buildAgregaUrl = (verb: string = 'ListRecords', metadataPrefix: str
   // Usar el set de Recursos Educativos y una fecha de inicio para optimizar la velocidad
   // Esto evita escaneos completos de la base de datos de Redined que causan timeouts
   url.searchParams.append('set', 'com_11162_3'); 
-  url.searchParams.append('from', '2023-01-01'); 
+  url.searchParams.append('from', '2020-01-01'); 
   return url.toString();
 };
 
