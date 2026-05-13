@@ -1,65 +1,122 @@
 import { XMLParser } from 'fast-xml-parser';
-import { Recurso } from '../types/recurso';
+import { JsonValue, Recurso } from '../types/recurso';
+
+type XmlScalar = string | number | boolean;
+type XmlNode = XmlScalar | { [key: string]: XmlNode } | XmlNode[];
+
+interface OaiDcMetadata {
+  'dc:title'?: XmlNode;
+  'dc:description'?: XmlNode;
+  'dc:subject'?: XmlNode;
+  'dc:language'?: XmlNode;
+  'dc:date'?: XmlNode;
+  'dc:identifier'?: XmlNode;
+}
+
+interface OaiRecord {
+  header?: {
+    identifier?: string;
+  };
+  metadata?: {
+    'oai_dc:dc'?: OaiDcMetadata;
+  };
+}
+
+interface ParsedOaiXml {
+  'OAI-PMH'?: {
+    ListRecords?: {
+      record?: OaiRecord | OaiRecord[];
+    };
+  };
+}
 
 const parser = new XMLParser({
   ignoreAttributes: false,
-  attributeNamePrefix: "@_",
+  attributeNamePrefix: '@_',
 });
 
-export const parseOaiXml = (xml: string): any => {
-  return parser.parse(xml);
-};
+export const parseOaiXml = (xml: string): ParsedOaiXml =>
+  parser.parse(xml) as ParsedOaiXml;
 
-export const normalizeRecords = (parsedXml: any, consulta: string): Recurso[] => {
+export const normalizeRecords = (parsedXml: ParsedOaiXml, consulta: string): Recurso[] => {
   const records = parsedXml?.['OAI-PMH']?.ListRecords?.record;
-  
+
   if (!records) return [];
 
   const recordList = Array.isArray(records) ? records : [records];
-  
-  return recordList.map((record: any) => {
-    const metadata = record.metadata?.['oai_dc:dc'];
-    if (!metadata) return null;
 
-    const titles = extractField(metadata['dc:title']);
-    const descriptions = extractField(metadata['dc:description']);
-    const subjects = extractField(metadata['dc:subject']);
-    const languages = extractField(metadata['dc:language']);
-    const dates = extractField(metadata['dc:date']);
-    const identifiers = extractField(metadata['dc:identifier']);
+  const normalizedRecords = recordList
+    .map((record): Recurso | null => {
+      const metadata = record.metadata?.['oai_dc:dc'];
+      if (!metadata) return null;
 
-    // Intentamos encontrar una URL válida entre los identificadores
-    const urlRecurso = identifiers.find((id: string) => id.startsWith('http')) || '';
+      const titles = extractField(metadata['dc:title']);
+      const descriptions = extractField(metadata['dc:description']);
+      const subjects = extractField(metadata['dc:subject']);
+      const languages = extractField(metadata['dc:language']);
+      const dates = extractField(metadata['dc:date']);
+      const identifiers = extractField(metadata['dc:identifier']);
+      const urlRecurso = identifiers.find((id) => id.startsWith('http')) || '';
 
-    return {
-      consulta,
-      identificador_oai: record.header?.identifier || '',
-      titulo: titles[0] || 'Sin título',
-      descripcion: descriptions.join(' ') || 'Sin descripción',
-      materia: subjects.join(', ') || 'N/A',
-      idioma: languages[0] || 'es',
-      fecha: dates[0] || 'N/A',
-      url_recurso: urlRecurso,
-      fuente: 'Agrega',
-      endpoint_consultado: 'https://agrega.educacion.es/catalogo/oai/request',
-      raw_metadata: record,
-    };
-  }).filter((r: any): r is Recurso => r !== null);
+      return {
+        consulta,
+        identificador_oai: record.header?.identifier || '',
+        titulo: titles[0] || 'Sin titulo',
+        descripcion: descriptions.join(' ') || 'Sin descripcion',
+        materia: subjects.join(', ') || 'N/A',
+        idioma: languages[0] || 'es',
+        fecha: dates[0] || 'N/A',
+        url_recurso: urlRecurso,
+        fuente: 'Agrega',
+        endpoint_consultado: 'https://agrega.educacion.es/catalogo/oai/request',
+        raw_metadata: record as JsonValue,
+      };
+    })
+    .filter((record): record is Recurso => record !== null);
+
+  return normalizedRecords;
 };
 
-const extractField = (field: any): string[] => {
+const extractField = (field?: XmlNode): string[] => {
   if (!field) return [];
+
   if (Array.isArray(field)) {
-    return field.map(f => (typeof f === 'object' ? f['#text'] || '' : f).toString());
+    return field
+      .map((entry) => normalizeXmlValue(entry))
+      .filter((value) => value.length > 0);
   }
-  return [(typeof field === 'object' ? field['#text'] || '' : field).toString()];
+
+  const value = normalizeXmlValue(field);
+  return value ? [value] : [];
 };
 
 export const filterByQuery = (recursos: Recurso[], query: string): Recurso[] => {
-  const q = query.toLowerCase();
-  return recursos.filter(r => 
-    r.titulo.toLowerCase().includes(q) || 
-    r.descripcion.toLowerCase().includes(q) ||
-    r.materia.toLowerCase().includes(q)
+  const normalizedQuery = query.toLowerCase();
+
+  return recursos.filter((recurso) =>
+    recurso.titulo.toLowerCase().includes(normalizedQuery) ||
+    recurso.descripcion.toLowerCase().includes(normalizedQuery) ||
+    recurso.materia.toLowerCase().includes(normalizedQuery)
   );
+};
+
+const normalizeXmlValue = (value: XmlNode): string => {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeXmlValue(entry)).join(' ').trim();
+  }
+
+  const textValue = value['#text'];
+  if (
+    typeof textValue === 'string' ||
+    typeof textValue === 'number' ||
+    typeof textValue === 'boolean'
+  ) {
+    return String(textValue);
+  }
+
+  return '';
 };

@@ -1,17 +1,16 @@
-export const validateQuery = (query: string): string | null => {
+export const validateQuery = (query?: string): string | null => {
   if (!query || query.trim().length === 0) {
-    return "La consulta no puede estar vacía.";
+    return 'La consulta no puede estar vacía.';
   }
-  
+
   if (query.length > 100) {
-    return "La consulta es demasiado larga (máximo 100 caracteres).";
+    return 'La consulta es demasiado larga (máximo 100 caracteres).';
   }
 
   return null;
 };
 
 export const sanitizeQuery = (query: string): string => {
-  // Eliminamos caracteres potencialmente peligrosos o innecesarios
   return query.replace(/[<>]/g, '').trim();
 };
 

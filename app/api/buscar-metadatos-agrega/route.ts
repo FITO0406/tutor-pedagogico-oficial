@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { fetchAgregaMetadata } from '@/lib/agrega';
 import { parseOaiXml, normalizeRecords, filterByQuery } from '@/lib/parser';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { isSupabaseConfigured, supabaseServer } from '@/lib/supabaseServer';
 import { validateQuery, sanitizeQuery } from '@/lib/validators';
+import { Recurso } from '@/types/recurso';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { consulta?: string };
     const { consulta } = body;
 
     // 1. Validar consulta
@@ -15,7 +16,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
-    const cleanQuery = sanitizeQuery(consulta);
+    const cleanQuery = sanitizeQuery(consulta as string);
+    const supabase = isSupabaseConfigured() ? supabaseServer : null;
+
+    if (supabase) {
+      const { data: cachedRecords, error: cacheError } = await supabase
+        .from('recursos_agrega')
+        .select('*')
+        .eq('consulta', cleanQuery)
+        .order('created_at', { ascending: false });
+
+      if (cacheError) {
+        console.error('Error al consultar la caché en Supabase:', cacheError);
+      } else if (cachedRecords && cachedRecords.length > 0) {
+        return NextResponse.json({
+          success: true,
+          recursos: cachedRecords as Recurso[],
+          total: cachedRecords.length,
+          fuente: 'Supabase cache',
+        });
+      }
+    }
 
     // 2. Consultar Agrega
     const xml = await fetchAgregaMetadata();
@@ -31,25 +52,45 @@ export async function POST(request: Request) {
       // 5. Guardar en Supabase (Cache)
       // Usamos upsert para evitar duplicados si el identificador_oai es el mismo (necesitaría índice único)
       // Por ahora, simplemente insertamos los resultados relevantes
-      const { error: dbError } = await supabaseServer
-        .from('recursos_agrega')
-        .insert(filteredRecords.map(r => ({
-          consulta: r.consulta,
-          identificador_oai: r.identificador_oai,
-          titulo: r.titulo,
-          descripcion: r.descripcion,
-          materia: r.materia,
-          idioma: r.idioma,
-          fecha: r.fecha,
-          url_recurso: r.url_recurso,
-          fuente: r.fuente,
-          endpoint_consultado: r.endpoint_consultado,
-          raw_metadata: r.raw_metadata
-        })));
+      if (supabase) {
+        const { data: existingRows, error: existingError } = await supabase
+          .from('recursos_agrega')
+          .select('identificador_oai')
+          .eq('consulta', cleanQuery);
 
-      if (dbError) {
-        console.error('Error al guardar en Supabase:', dbError);
-        // Continuamos aunque falle el guardado en la DB
+        if (existingError) {
+          console.error('Error al consultar registros existentes en Supabase:', existingError);
+        } else {
+          const existingIds = new Set(
+            (existingRows || []).map((row) => row.identificador_oai).filter(Boolean)
+          );
+
+          const recordsToInsert = filteredRecords.filter(
+            (record) => !existingIds.has(record.identificador_oai)
+          );
+
+          if (recordsToInsert.length > 0) {
+            const { error: dbError } = await supabase
+              .from('recursos_agrega')
+              .insert(recordsToInsert.map((record) => ({
+                consulta: record.consulta,
+                identificador_oai: record.identificador_oai,
+                titulo: record.titulo,
+                descripcion: record.descripcion,
+                materia: record.materia,
+                idioma: record.idioma,
+                fecha: record.fecha,
+                url_recurso: record.url_recurso,
+                fuente: record.fuente,
+                endpoint_consultado: record.endpoint_consultado,
+                raw_metadata: record.raw_metadata,
+              })));
+
+            if (dbError) {
+              console.error('Error al guardar en Supabase:', dbError);
+            }
+          }
+        }
       }
     }
 
@@ -60,11 +101,11 @@ export async function POST(request: Request) {
       fuente: 'Agrega'
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en API buscar-metadatos-agrega:', error);
     return NextResponse.json({ 
       error: 'Error interno al procesar la solicitud.',
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Error desconocido',
     }, { status: 500 });
   }
 }
