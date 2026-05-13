@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/api/buscar-metadatos-agrega/route.ts": {
+      "regions": ["fra1"]
+    }
+  }
+}
